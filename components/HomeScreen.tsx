@@ -173,35 +173,35 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
     }
 
     // c) Insert new members 
-  const newMembers = updatedTeam.members.filter(
-    (m) => !m.id || !existingMemberIds.includes(m.id) // not in DB
-  )
+    const newMembers = updatedTeam.members.filter(
+      (m) => !m.id || !existingMemberIds.includes(m.id) // not in DB
+    )
 
-  if (newMembers.length > 0) {
-    const { data: insertedMembers, error: insertError } = await supabase
-      .from("team_members")
-      .insert(
-        newMembers.map((m) => ({
-          name: m.name,
-          score: m.score,
-          team_id: teamId,
-        }))
-      )
-      .select()
+    if (newMembers.length > 0) {
+      const { data: insertedMembers, error: insertError } = await supabase
+        .from("team_members")
+        .insert(
+          newMembers.map((m) => ({
+            name: m.name,
+            score: m.score,
+            team_id: teamId,
+          }))
+        )
+        .select()
 
-    if (insertError) {
-      console.error("Insert Error:", insertError)
-      throw insertError
+      if (insertError) {
+        console.error("Insert Error:", insertError)
+        throw insertError
+      }
+
+      console.log("Inserted Members:", insertedMembers)
+
+      // Merge inserted IDs back into state
+      updatedTeam.members = updatedTeam.members.map((m) => {
+        const dbMatch = insertedMembers.find((im) => im.name === m.name && im.score === m.score)
+        return dbMatch ? dbMatch : m
+      })
     }
-
-    console.log("Inserted Members:", insertedMembers)
-
-    // Merge inserted IDs back into state
-    updatedTeam.members = updatedTeam.members.map((m) => {
-      const dbMatch = insertedMembers.find((im) => im.name === m.name && im.score === m.score)
-      return dbMatch ? dbMatch : m
-    })
-  }
 
     // 3️⃣ Update local state
     setTeams((prev) =>
