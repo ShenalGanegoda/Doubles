@@ -1,94 +1,96 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Users, LogOut } from 'lucide-react'
-import { AddTeamDialog } from "./add-team-dialog"
-import { TeamCard } from "./team-card"
-import { TeamSplitter } from "./team-splitter"
-import { DeleteTeamDialog } from "./delete-team-dialog"
-import { Footer } from "./footer"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Users, LogOut } from "lucide-react";
+import { AddTeamDialog } from "./add-team-dialog";
+import { TeamCard } from "./team-card";
+import { TeamSplitter } from "./team-splitter";
+import { DeleteTeamDialog } from "./delete-team-dialog";
+import { Footer } from "./footer";
 
 interface User {
-  email: string
-  name: string
+  email: string;
+  name: string;
 }
 
 interface TeamMember {
-  id: string
-  name: string
-  score: number
+  id: string;
+  name: string;
+  score: number;
 }
 
 interface Team {
-  id: string
-  name: string
-  members: TeamMember[]
-  createdAt: string
+  id: string;
+  name: string;
+  members: TeamMember[];
+  createdAt: string;
 }
 
 interface HomeScreenProps {
-  user: User
-  onLogout: () => void
+  user: User;
+  onLogout: () => void;
 }
 
 export function HomeScreen({ user, onLogout }: HomeScreenProps) {
-  const [teams, setTeams] = useState<Team[]>([])
-  const [showAddTeam, setShowAddTeam] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
-  const [editingTeam, setEditingTeam] = useState<Team | null>(null)
-  const [deletingTeam, setDeletingTeam] = useState<Team | null>(null)
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
 
   useEffect(() => {
     // Load teams from localStorage
-    const savedTeams = localStorage.getItem("doublesTeams")
+    const savedTeams = localStorage.getItem("doublesTeams");
     if (savedTeams) {
-      setTeams(JSON.parse(savedTeams))
+      setTeams(JSON.parse(savedTeams));
     }
-  }, [])
+  }, []);
 
   const saveTeams = (newTeams: Team[]) => {
-    setTeams(newTeams)
-    localStorage.setItem("doublesTeams", JSON.stringify(newTeams))
-  }
+    setTeams(newTeams);
+    localStorage.setItem("doublesTeams", JSON.stringify(newTeams));
+  };
 
   const addTeam = (team: Omit<Team, "id" | "createdAt">) => {
     const newTeam: Team = {
       ...team,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-    }
-    const updatedTeams = [...teams, newTeam]
-    saveTeams(updatedTeams)
-  }
+    };
+    const updatedTeams = [...teams, newTeam];
+    saveTeams(updatedTeams);
+  };
 
   const handleDeleteTeam = (team: Team) => {
-    setDeletingTeam(team)
-  }
+    setDeletingTeam(team);
+  };
 
   const confirmDeleteTeam = () => {
     if (deletingTeam) {
-      const updatedTeams = teams.filter((team) => team.id !== deletingTeam.id)
-      saveTeams(updatedTeams)
+      const updatedTeams = teams.filter((team) => team.id !== deletingTeam.id);
+      saveTeams(updatedTeams);
       if (selectedTeam?.id === deletingTeam.id) {
-        setSelectedTeam(null)
+        setSelectedTeam(null);
       }
-      setDeletingTeam(null)
+      setDeletingTeam(null);
     }
-  }
+  };
 
   const updateTeam = (updatedTeam: Omit<Team, "id" | "createdAt">) => {
     if (editingTeam) {
       const updated: Team = {
         ...editingTeam,
         ...updatedTeam,
-      }
-      const updatedTeams = teams.map((team) => (team.id === editingTeam.id ? updated : team))
-      saveTeams(updatedTeams)
-      setEditingTeam(null)
+      };
+      const updatedTeams = teams.map((team) =>
+        team.id === editingTeam.id ? updated : team
+      );
+      saveTeams(updatedTeams);
+      setEditingTeam(null);
     }
-  }
+  };
 
   if (selectedTeam) {
     return (
@@ -97,11 +99,11 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
         onBack={() => setSelectedTeam(null)}
         user={user}
         onEditTeam={() => {
-          setEditingTeam(selectedTeam)
-          setSelectedTeam(null)
+          setEditingTeam(selectedTeam);
+          setSelectedTeam(null);
         }}
       />
-    )
+    );
   }
 
   return (
@@ -119,7 +121,9 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Doubles</h1>
-                <p className="text-sm text-slate-400">Welcome back, {user.name}!</p>
+                <p className="text-sm text-slate-400">
+                  Welcome back, {user.name}!
+                </p>
               </div>
             </div>
             <Button
@@ -138,7 +142,9 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
         <main className="container mx-auto px-4 py-8 flex-1">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Your Teams</h2>
-            <p className="text-slate-400">Create and manage your Futsal teams</p>
+            <p className="text-slate-400">
+              Create and manage your Futsal teams
+            </p>
           </div>
 
           {/* Teams Grid */}
@@ -152,8 +158,12 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
                 <div className="w-16 h-16 bg-gray-800/60 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-700/30 transition-colors">
                   <Plus className="w-8 h-8 text-gray-500 group-hover:text-green-500 transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">Add New Team</h3>
-                <p className="text-slate-400 text-center text-sm">Create a team and add players</p>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Add New Team
+                </h3>
+                <p className="text-slate-400 text-center text-sm">
+                  Create a team and add players
+                </p>
               </CardContent>
             </Card>
 
@@ -174,8 +184,12 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
               <div className="w-24 h-24 bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-12 h-12 text-gray-600" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No teams yet</h3>
-              <p className="text-slate-400 mb-6">Get started by creating your first team</p>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No teams yet
+              </h3>
+              <p className="text-slate-400 mb-6">
+                Get started by creating your first team
+              </p>
               <Button
                 onClick={() => setShowAddTeam(true)}
                 className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
@@ -188,7 +202,11 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
         </main>
       </div>
 
-      <AddTeamDialog open={showAddTeam} onOpenChange={setShowAddTeam} onAddTeam={addTeam} />
+      <AddTeamDialog
+        open={showAddTeam}
+        onOpenChange={setShowAddTeam}
+        onAddTeam={addTeam}
+      />
 
       <AddTeamDialog
         open={!!editingTeam}
@@ -206,7 +224,7 @@ export function HomeScreen({ user, onLogout }: HomeScreenProps) {
 
       <Footer />
     </div>
-  )
+  );
 }
 
-export default HomeScreen
+export default HomeScreen;
