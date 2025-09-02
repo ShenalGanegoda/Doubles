@@ -1,91 +1,110 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Shuffle, Users, Trophy, Edit } from "lucide-react"
-import { Footer } from "./footer"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Shuffle, Users, Trophy, Edit } from "lucide-react";
+import { Footer } from "./footer";
 
 interface TeamMember {
-  id: string
-  name: string
-  score: number
+  id: string;
+  name: string;
+  score: number;
 }
 
 interface Team {
-  id: string
-  name: string
-  members: TeamMember[]
-  createdAt: string
+  id: string;
+  name: string;
+  members: TeamMember[];
+  createdAt: string;
 }
 
 interface User {
-  email: string
-  name: string
+  email: string;
+  name: string;
 }
 
 interface TeamSplitterProps {
-  team: Team
-  onBack: () => void
-  user: User
-  onEditTeam: () => void
+  team: Team;
+  onBack: () => void;
+  user: User;
+  onEditTeam: () => void;
 }
 
 interface SplitTeams {
-  team1: TeamMember[]
-  team2: TeamMember[]
-  team1Score: number
-  team2Score: number
+  team1: TeamMember[];
+  team2: TeamMember[];
+  team1Score: number;
+  team2Score: number;
 }
 
-export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterProps) {
-  const [selectedMembers, setSelectedMembers] = useState<string[]>(team.members.map((m) => m.id))
-  const [splitTeams, setSplitTeams] = useState<SplitTeams | null>(null)
+export function TeamSplitter({
+  team,
+  onBack,
+  user,
+  onEditTeam,
+}: TeamSplitterProps) {
+  const [selectedMembers, setSelectedMembers] = useState<string[]>(
+    team.members.map((m) => m.id)
+  );
+  const [splitTeams, setSplitTeams] = useState<SplitTeams | null>(null);
 
   const toggleMember = (memberId: string) => {
-    setSelectedMembers((prev) => (prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]))
-  }
+    setSelectedMembers((prev) =>
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
 
   const generateTeams = () => {
-    const selected = team.members.filter((member) => selectedMembers.includes(member.id))
+    const selected = team.members.filter((member) =>
+      selectedMembers.includes(member.id)
+    );
 
-    if (selected.length < 2) return
+    if (selected.length < 2) return;
 
     // Sort players by score (descending)
-    const sortedPlayers = [...selected].sort((a, b) => b.score - a.score)
+    const sortedPlayers = [...selected].sort((a, b) => b.score - a.score);
 
-    const team1: TeamMember[] = []
-    const team2: TeamMember[] = []
-    let team1Score = 0
-    let team2Score = 0
+    const team1: TeamMember[] = [];
+    const team2: TeamMember[] = [];
+    let team1Score = 0;
+    let team2Score = 0;
 
     // Distribute players to balance teams
     sortedPlayers.forEach((player) => {
       if (team1Score <= team2Score) {
-        team1.push(player)
-        team1Score += player.score
+        team1.push(player);
+        team1Score += player.score;
       } else {
-        team2.push(player)
-        team2Score += player.score
+        team2.push(player);
+        team2Score += player.score;
       }
-    })
+    });
 
     setSplitTeams({
       team1,
       team2,
       team1Score,
       team2Score,
-    })
-  }
+    });
+  };
 
   const resetSplit = () => {
-    setSplitTeams(null)
-  }
+    setSplitTeams(null);
+  };
 
-  const selectedCount = selectedMembers.length
-  const canGenerate = selectedCount >= 2
+  const selectedCount = selectedMembers.length;
+  const canGenerate = selectedCount >= 2;
 
   return (
     <div className="min-h-screen bg-gray-900 relative flex flex-col">
@@ -104,7 +123,9 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-white">{team.name}</h1>
-                <p className="text-sm text-slate-400">Split into balanced teams</p>
+                <p className="text-sm text-slate-400">
+                  Split into balanced teams
+                </p>
               </div>
             </div>
             <Button
@@ -129,7 +150,8 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                     Select Players
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    Choose which players to include in the team split ({selectedCount} selected)
+                    Choose which players to include in the team split (
+                    {selectedCount} selected)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -146,11 +168,17 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           className="border-gray-600 data-[state=checked]:bg-green-700 data-[state=checked]:border-green-700"
                         />
                         <div className="flex-1">
-                          <label htmlFor={member.id} className="text-white font-medium cursor-pointer">
+                          <label
+                            htmlFor={member.id}
+                            className="text-white font-medium cursor-pointer"
+                          >
                             {member.name}
                           </label>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="bg-gray-700 text-gray-400 text-xs">
+                            <Badge
+                              variant="secondary"
+                              className="bg-gray-700 text-gray-400 text-xs"
+                            >
                               Score: {member.score}/10
                             </Badge>
                           </div>
@@ -172,14 +200,18 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                   Generate Balanced Teams
                 </Button>
                 {!canGenerate && (
-                  <p className="text-slate-400 text-sm mt-2">Select at least 2 players to generate teams</p>
+                  <p className="text-slate-400 text-sm mt-2">
+                    Select at least 2 players to generate teams
+                  </p>
                 )}
               </div>
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">Teams Generated!</h2>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  Teams Generated!
+                </h2>
                 <p className="text-slate-400">Here are your balanced teams</p>
               </div>
 
@@ -192,11 +224,15 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                         <Trophy className="w-5 h-5 text-blue-400" />
                         Team 01
                       </div>
-                      <Badge className="bg-slate-700 text-white">Total: {splitTeams.team1Score}</Badge>
+                      <Badge className="bg-slate-700 text-white">
+                        Total: {splitTeams.team1Score}
+                      </Badge>
                     </CardTitle>
                     <CardDescription className="text-blue-200">
                       {splitTeams.team1.length} players • Avg:{" "}
-                      {(splitTeams.team1Score / splitTeams.team1.length).toFixed(1)}
+                      {(
+                        splitTeams.team1Score / splitTeams.team1.length
+                      ).toFixed(1)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -206,10 +242,9 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           key={member.id}
                           className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/40"
                         >
-                          <span className="text-white font-medium">{member.name}</span>
-                          <Badge variant="secondary" className="bg-slate-800 text-slate-200">
-                            {member.score}
-                          </Badge>
+                          <span className="text-white font-medium">
+                            {member.name}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -224,11 +259,15 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                         <Trophy className="w-5 h-5 text-red-400" />
                         Team 02
                       </div>
-                      <Badge className="bg-red-800 text-white">Total: {splitTeams.team2Score}</Badge>
+                      <Badge className="bg-red-800 text-white">
+                        Total: {splitTeams.team2Score}
+                      </Badge>
                     </CardTitle>
                     <CardDescription className="text-red-200">
                       {splitTeams.team2.length} players • Avg:{" "}
-                      {(splitTeams.team2Score / splitTeams.team2.length).toFixed(1)}
+                      {(
+                        splitTeams.team2Score / splitTeams.team2.length
+                      ).toFixed(1)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -238,10 +277,9 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           key={member.id}
                           className="flex items-center justify-between p-3 bg-red-900/20 rounded-lg border border-red-800/30"
                         >
-                          <span className="text-white font-medium">{member.name}</span>
-                          <Badge variant="secondary" className="bg-red-900 text-red-200">
-                            {member.score}
-                          </Badge>
+                          <span className="text-white font-medium">
+                            {member.name}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -258,31 +296,29 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Selection
                 </Button>
-                <Button
-                  onClick={generateTeams}
-                  className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-                >
-                  <Shuffle className="w-4 h-4 mr-2" />
-                  Shuffle Again
-                </Button>
               </div>
 
-              {/* Balance Info */}
+              {/* Balance Info 
               <Card className="bg-gray-900/40 border-gray-800">
                 <CardContent className="pt-6">
                   <div className="text-center">
                     <p className="text-gray-500 text-sm">
-                      Score difference: {Math.abs(splitTeams.team1Score - splitTeams.team2Score)} points
+                      Score difference:{" "}
+                      {Math.abs(splitTeams.team1Score - splitTeams.team2Score)}{" "}
+                      points
                     </p>
-                    <div className="mt-2 text-xs text-gray-600">Teams are balanced based on total skill scores</div>
+                    <div className="mt-2 text-xs text-gray-600">
+                      Teams are balanced based on total skill scores
+                    </div>
                   </div>
                 </CardContent>
               </Card>
+              */}
             </div>
           )}
         </main>
       </div>
       <Footer />
     </div>
-  )
+  );
 }
