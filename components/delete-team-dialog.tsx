@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dialog"
 import { AlertTriangle } from 'lucide-react'
 
+type FutsalPosition = "forward" | "midfield" | "defense"
+
 interface Team {
   id: string
   name: string
-  members: { id: string; name: string; score: number }[]
+  members: { id: string; name: string; score: number; position?: FutsalPosition }[]
   createdAt: string
 }
 

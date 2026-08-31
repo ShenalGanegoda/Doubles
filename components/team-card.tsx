@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Users, Calendar, Trash2, Play, Edit } from "lucide-react"
 
+type FutsalPosition = "forward" | "midfield" | "defense"
+
 interface TeamMember {
   id: string
   name: string
   score: number
+  position?: FutsalPosition
 }
 
 interface Team {

@@ -8,10 +8,13 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Shuffle, Users, Trophy, Edit } from "lucide-react"
 import { Footer } from "./footer"
 
+type FutsalPosition = "forward" | "midfield" | "defense"
+
 interface TeamMember {
   id: string
   name: string
   score: number
+  position?: FutsalPosition
 }
 
 interface Team {
@@ -49,26 +52,91 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
   }
 
   const generateTeams = () => {
-    const selected = team.members.filter((member) => selectedMembers.includes(member.id))
+    const selected = team.members
+      .filter((member) => selectedMembers.includes(member.id))
+      .sort((a, b) => {
+        const positionOrder: FutsalPosition[] = ["forward", "midfield", "defense"]
+        return b.score - a.score || positionOrder.indexOf(a.position ?? "midfield") - positionOrder.indexOf(b.position ?? "midfield")
+      })
 
     if (selected.length < 2) return
 
-    // Sort players by score (descending)
-    const sortedPlayers = [...selected].sort((a, b) => b.score - a.score)
+    const getPosition = (member: TeamMember) => member.position ?? "midfield"
+    const roleOrder: FutsalPosition[] = ["forward", "midfield", "defense"]
+
+    const getRoleCount = (members: TeamMember[], position: FutsalPosition) =>
+      members.filter((member) => getPosition(member) === position).length
+
+    const getScore = (members: TeamMember[]) =>
+      members.reduce((total, member) => total + member.score, 0)
+
+    const getPenalty = (team1: TeamMember[], team2: TeamMember[]) => {
+      const scoreGap = Math.abs(getScore(team1) - getScore(team2))
+      const sizeGap = Math.abs(team1.length - team2.length)
+      const roleGap = roleOrder.reduce(
+        (total, position) => total + Math.abs(getRoleCount(team1, position) - getRoleCount(team2, position)),
+        0,
+      )
+
+      return scoreGap * 12 + roleGap * 18 + sizeGap * 4
+    }
+
+    let bestSplit: SplitTeams | null = null
+    let bestPenalty = Number.POSITIVE_INFINITY
+
+    for (let mask = 1; mask < (1 << selected.length) - 1; mask++) {
+      const team1: TeamMember[] = []
+      const team2: TeamMember[] = []
+
+      selected.forEach((player, index) => {
+        if ((mask >> index) & 1) {
+          team1.push(player)
+        } else {
+          team2.push(player)
+        }
+      })
+
+      if (team1.length === 0 || team2.length === 0) continue
+
+      const penalty = getPenalty(team1, team2)
+      if (penalty < bestPenalty) {
+        bestPenalty = penalty
+        bestSplit = {
+          team1,
+          team2,
+          team1Score: getScore(team1),
+          team2Score: getScore(team2),
+        }
+      }
+    }
+
+    if (bestSplit) {
+      setSplitTeams(bestSplit)
+      return
+    }
 
     const team1: TeamMember[] = []
     const team2: TeamMember[] = []
     let team1Score = 0
     let team2Score = 0
 
-    // Distribute players to balance teams
-    sortedPlayers.forEach((player) => {
-      if (team1Score <= team2Score) {
+    selected.forEach((player) => {
+      const playerPosition = getPosition(player)
+      const team1RoleCount = getRoleCount(team1, playerPosition)
+      const team2RoleCount = getRoleCount(team2, playerPosition)
+      const nextTeam1Score = team1Score + player.score
+      const nextTeam2Score = team2Score + player.score
+
+      const chooseTeam1 =
+        (team1RoleCount <= team2RoleCount && Math.abs(nextTeam1Score - team2Score) <= Math.abs(nextTeam2Score - team1Score)) ||
+        (team1RoleCount < team2RoleCount && Math.abs(nextTeam1Score - team2Score) < Math.abs(nextTeam2Score - team1Score))
+
+      if (chooseTeam1) {
         team1.push(player)
-        team1Score += player.score
+        team1Score = nextTeam1Score
       } else {
         team2.push(player)
-        team2Score += player.score
+        team2Score = nextTeam2Score
       }
     })
 
@@ -82,6 +150,11 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
 
   const resetSplit = () => {
     setSplitTeams(null)
+  }
+
+  const formatPosition = (position?: FutsalPosition) => {
+    if (!position) return "Midfield"
+    return position.charAt(0).toUpperCase() + position.slice(1)
   }
 
   const selectedCount = selectedMembers.length
@@ -149,7 +222,10 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           <label htmlFor={member.id} className="text-white font-medium cursor-pointer">
                             {member.name}
                           </label>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="secondary" className="bg-gray-700 text-gray-400 text-xs">
+                              {formatPosition(member.position)}
+                            </Badge>
                             <Badge variant="secondary" className="bg-gray-700 text-gray-400 text-xs">
                               Score: {member.score}/10
                             </Badge>
@@ -206,7 +282,12 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           key={member.id}
                           className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/40"
                         >
-                          <span className="text-white font-medium">{member.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-white font-medium">{member.name}</span>
+                            <Badge variant="secondary" className="bg-slate-800 text-slate-200 text-[10px] uppercase">
+                              {formatPosition(member.position)}
+                            </Badge>
+                          </div>
                           <Badge variant="secondary" className="bg-slate-800 text-slate-200">
                             {member.score}
                           </Badge>
@@ -238,7 +319,12 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                           key={member.id}
                           className="flex items-center justify-between p-3 bg-red-900/20 rounded-lg border border-red-800/30"
                         >
-                          <span className="text-white font-medium">{member.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-white font-medium">{member.name}</span>
+                            <Badge variant="secondary" className="bg-red-900 text-red-200 text-[10px] uppercase">
+                              {formatPosition(member.position)}
+                            </Badge>
+                          </div>
                           <Badge variant="secondary" className="bg-red-900 text-red-200">
                             {member.score}
                           </Badge>
@@ -274,7 +360,7 @@ export function TeamSplitter({ team, onBack, user, onEditTeam }: TeamSplitterPro
                     <p className="text-gray-500 text-sm">
                       Score difference: {Math.abs(splitTeams.team1Score - splitTeams.team2Score)} points
                     </p>
-                    <div className="mt-2 text-xs text-gray-600">Teams are balanced based on total skill scores</div>
+                    <div className="mt-2 text-xs text-gray-600">Teams are balanced using both player role and total skill scores</div>
                   </div>
                 </CardContent>
               </Card>
